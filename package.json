@@ -1,6 +1,11 @@
 {
-  "name": "actividad-uno",
-  "version": "0.1.0",
+  "name": "proyecto-react",
+  "version": "0.1.1",
+  "author": {
+    "name": "Jose Zuniga",
+    "email": "",
+    "url": "https://github.com/jotaZuniga"
+  },
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
@@ -36,5 +41,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "jshint": "^2.13.6"
   }
 }
