@@ -8,12 +8,18 @@ import { Profile as Info } from './components/Profile';
 import { randomId } from './helpers/libs';
 import { mockPost } from './helpers/mock';
 import { useEffect, useState, useMemo } from 'react';
+import { login } from './services/loginService';
+import { Login } from './components/Login';
 
 const App = () => {
   const [search, setSearch] = useState('');
   const [section, setSection] = useState('home');
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const isLocalStorageSet = localStorage.getItem('login') !== '0';
+  const [loginOk, setLoginOk] = useState(isLocalStorageSet);
+  const [statusCode, setStatusCode] = useState(200);
 
   const User = useMemo(() => new Profile(randomId()), []);
 
@@ -59,6 +65,22 @@ const App = () => {
     if (filteredData) setPosts(filteredData);
   }
 
+  const handleLoginSubmit = (user, password) => {
+    try {
+      const response = login({user, password});
+      response.then(data => {
+        if(data.status === 200) {
+          
+          localStorage.setItem('login', data.data.token);
+          setLoginOk(true);
+          setStatusCode(data.status);
+        }
+      }, () => setStatusCode(401)); 
+    } catch (error) {
+      setLoginOk(false);
+    }
+  }
+
 
   useEffect(() => {
     User.setAvatar('https://www.vhv.rs/dpng/d/426-4263064_circle-avatar-png-picture-circle-avatar-image-png.png');
@@ -84,19 +106,24 @@ const App = () => {
 
   return (
     <div className="container-fluid">
-      <header className='bg-light'>
+      <header className={`bg-light ${loginOk ? 'd-block' : 'd-none'}`}>
         <NavBar onLogoClick={handleLogoClick} onProfileClick={handleProfileClick}/>
       </header>
       <main role='main'>
-        <div className='py-3'>
-          <SearchBar value={search} onSearch={handleSearch}/>
-        </div>
-        <div className={`py-3 ${section === 'home' ? 'd-flex' : 'd-none'}`}>
-          {isLoading ? (<Loading />) : (<PostList posts={posts}/>) }
-        </div>
-        <div className={`py-3 ${section === 'profile' ? 'd-flex justify-content-center align-items-center' : 'd-none'}`}>
-          <Info avatar={User.getAvatar()} bio={User.getBio()} username={User.getName()} />
-        </div>        
+        {loginOk ? (
+          <>
+            <div className={`py-3 ${section === 'home' ? 'd-flex' : 'd-none'}`}>
+              <SearchBar value={search} onSearch={handleSearch} />
+            </div>
+            <div className={`py-3 ${section === 'home' ? 'd-flex' : 'd-none'}`}>
+              {isLoading ? (<Loading />) : (<PostList posts={posts} />)}
+            </div>
+            <div className={`py-3 ${section === 'profile' ? 'd-flex justify-content-center align-items-center' : 'd-none'}`}>
+              <Info avatar={User.getAvatar()} bio={User.getBio()} username={User.getName()} />
+            </div>
+          </>
+        ) : <Login onLoginComplete={handleLoginSubmit} code={statusCode}/> }
+
       </main>
       <footer className='text-muted'>
         <div className='container'>
